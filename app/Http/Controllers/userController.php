@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Auth;
 
 class userController extends Controller
 {
@@ -87,4 +88,26 @@ class userController extends Controller
         $user->delete();
         return response()->json(['message' => 'Delete user', 'data' => $id]);
     }
+
+    public function login(Request $request)
+    {
+        $credentials = $request->only('email', 'password');
+        // Check if the credentials are correct in the database
+        $user = User::where('email', $credentials['email'])->first();
+        if (!$user){
+            return response()->json(['message' => 'Email not found'], 404);
+        }
+
+        // Check if the password is correct
+        if (!password_verify($credentials['password'], $user->password)){
+            return response()->json(['message' => 'Password is incorrect'], 404);
+        }
+
+        // Generate token
+        $token = JWTAuth::fromUser($user);
+        return response()->json(['message' => 'Login success', 'token' => $token]);
+        
+    }
+
+
 }
