@@ -25,9 +25,14 @@ class userController extends Controller
         // Validate the request
         $request->validate([
             'name' => 'required',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email',
             'password' => 'required',
         ]);
+
+        $user = User::where('email', $request->email)->first();
+        if ($user){
+            return response()->json(['message' => 'Email already exists'], 400);
+        }
 
         // Create a new user
         $user = new User();
@@ -54,20 +59,15 @@ class userController extends Controller
     public function update(Request $request, string $id)
     {
         $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email,',
-            'password' => 'required',
+            'name' => 'required'
         ]);
 
         $user = User::find($id);
         if (!$user){
             return response()->json(['message' => 'User not found'], 404);
         }
-
        
         $user->name = $request->name;
-        $user->email = $request->email;
-        $user->password = bcrypt($request->password);
         $user->save();
 
         return response()->json(['message' => 'Update user', 'data' => $user]);
@@ -83,7 +83,7 @@ class userController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        $user->delete();
+        $user->disabled = true;
         return response()->json(['message' => 'Delete user', 'data' => $id]);
     }
 }
